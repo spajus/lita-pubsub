@@ -1,41 +1,49 @@
 module Lita
   module Handlers
     class Pubsub < Handler
-      http.get('/pubsub/:event', :http_get)
-      http.post('/pubsub/:event', :http_post)
+      http.get('/pubsub/:event', :http_get, event: %r{[a-zA-Z0-9\-\.\:_]+})
+      http.post('/pubsub/:event', :http_post, event: %r{[a-zA-Z0-9\-\.\:_]+})
+
+      route(
+        /^all subscriptions$/i,
+        :all_subscriptions,
+        command: true,
+        help: { 'all subscriptions' => 'pubsub: shows all subscriptions' }
+      )
+
       route(
         /^subscriptions$/i,
         :subscriptions,
         command: true,
-        help: { 'subscriptions' => 'shows current room subscriptions' }
+        help: { 'subscriptions' => 'pubsub: shows current room subscriptions' }
       )
 
       route(
         /^subscribers (of )?([a-z0-9\-\.\:_]+)$/i,
         :subscribers,
         command: true,
-        help: { 'subscriptions of EVENT' => 'shows rooms subscribed to EVENT' }
+        help: { 'subscriptions of EVENT' => 'pubsub: shows rooms subscribed to EVENT' }
       )
 
       route(
         /^subscribe ([a-z0-9\-\.\:_]+)$/i,
         :subscribe,
         command: true,
-        help: { 'subscribe EVENT' => 'subscribes room to event' }
+        help: { 'subscribe EVENT' => 'pubsub: subscribes room to event' }
       )
 
       route(
         /^unsubscribe ([a-z0-9\-\.\:_]+)$/i,
         :unsubscribe,
         command: true,
-        help: { 'unsubscribe EVENT' => 'subscribes current channel to event' }
+        help: { 'unsubscribe EVENT' => 'pubsub: subscribes current channel to event' }
       )
 
       route(
         /^publish ([a-z0-9\-\.\:_]+) (.+)$/i,
         :publish,
         command: true,
-        help: { 'publish EVENT DATA' => 'publishes DATA to EVENT subscribers' }
+        help: { 'publish EVENT DATA' => 'pubsub: publishes DATA to EVENT subscribers' }
       )
 
       on(:pubsub) do |payload|
@@ -66,6 +74,14 @@ module Lita
         response.write('ok')
       end
 
+      def all_subscriptions(response)
+        events = redis.smembers('pubsub.events').sort
+        subscriptions = events.map do |event|
+          "#{event} -> #{redis.smembers("pubsub.events.#{event}").sort}"
+        end
+        response.reply("All subscriptions:\n#{subscriptions.join("\n")}")
+      end
+
       def subscriptions(response)
         room = response.room
         return response.reply('This command only works in a room') unless room
@@ -83,6 +99,7 @@ module Lita
         event = response.matches[0][0]
         room = response.room
         return response.reply('This command only works in a room') unless room
+        redis.sadd("pubsub.events", event)
         redis.sadd("pubsub.rooms.#{room.id}", event)
         redis.sadd("pubsub.events.#{event}", room.id)
         response.reply("Subscribed #{room.name} to #{event} events")
@@ -96,6 +113,8 @@ module Lita
         if subscriptions.include?(event)
           redis.srem("pubsub.rooms.#{room.id}", event)
           redis.srem("pubsub.events.#{event}", room.id)
+          subscribers = redis.smembers("pubsub.events.#{event}")
+          redis.srem("pubsub.events", event) if subscribers.empty?
           response.reply("Unsubscribed #{room.name} from #{event} events")
         else
           response.reply(
