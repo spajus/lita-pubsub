@@ -1,6 +1,8 @@
 module Lita
   module Handlers
     class Pubsub < Handler
+      config :http_password
+
       http.get('/pubsub/:event', :http_get, event: %r{[a-zA-Z0-9\-\.\:_]+})
       http.post('/pubsub/:event', :http_post, event: %r{[a-zA-Z0-9\-\.\:_]+})
 
@@ -56,6 +58,7 @@ module Lita
       end
 
       def http_get(request, response)
+        validate_http_password!(request.params['password'])
         robot.trigger(
           :pubsub,
           event: request.env['router.params'][:event],
@@ -66,6 +69,7 @@ module Lita
 
       def http_post(request, response)
         data = JSON.parse(request.body.read)
+        validate_http_password!(request.params['password'] || data['password'])
         robot.trigger(
           :pubsub,
           event: request.env['router.params'][:event],
@@ -127,6 +131,13 @@ module Lita
       def publish(response)
         event, data = response.matches[0]
         robot.trigger(:pubsub, event: event, data: data)
+      end
+
+      private
+
+      def validate_http_password!(password)
+        return if config.http_password.nil? || config.http_password.empty?
+        raise 'incorrect password!' if password != config.http_password
       end
 
       Lita.register_handler(self)
