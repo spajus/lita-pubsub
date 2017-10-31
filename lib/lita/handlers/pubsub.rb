@@ -3,8 +3,8 @@ module Lita
     class Pubsub < Handler
       config :http_password
 
-      http.get('/pubsub/:event', :http_get, event: %r{[a-zA-Z0-9\-\.\:_]+})
-      http.post('/pubsub/:event', :http_post, event: %r{[a-zA-Z0-9\-\.\:_]+})
+      http.get('/publish', :http_get)
+      http.post('/publish', :http_post)
 
       route(
         /^all subscriptions$/i,
@@ -42,6 +42,13 @@ module Lita
       )
 
       route(
+        /^unsubscribe all events$/i,
+        :unsubscribe_all,
+        command: true,
+        help: { 'unsubscribe all events' => 'pubsub: unsubscribes current channel from all events' }
+      )
+
+      route(
         /^publish ([a-z0-9\-\.\:_]+) (.+)$/i,
         :publish,
         command: true,
@@ -61,8 +68,8 @@ module Lita
         validate_http_password!(request.params['password'])
         robot.trigger(
           :pubsub,
-          event: request.env['router.params'][:event],
-          data: request.params['payload']
+          event: request.params['event'],
+          data: request.params['data']
         )
         response.write('ok')
       end
@@ -72,8 +79,8 @@ module Lita
         validate_http_password!(request.params['password'] || data['password'])
         robot.trigger(
           :pubsub,
-          event: request.env['router.params'][:event],
-          data: data['payload']
+          event: data['event'],
+          data: data['data']
         )
         response.write('ok')
       end
@@ -125,6 +132,19 @@ module Lita
             "There is no #{event} subscription in #{room.name}.\n" \
             "Current subscriptions: #{subscriptions}"
           )
+        end
+      end
+
+      def unsubscribe_all(response)
+        room = response.room
+        return response.reply('This command only works in a room') unless room
+        subscriptions = redis.smembers("pubsub.rooms.#{room.id}").sort
+        subscriptions.each do |event|
+          redis.srem("pubsub.rooms.#{room.id}", event)
+          redis.srem("pubsub.events.#{event}", room.id)
+          subscribers = redis.smembers("pubsub.events.#{event}")
+          redis.srem("pubsub.events", event) if subscribers.empty?
+          response.reply("Unsubscribed #{room.name} from #{event} events")
         end
       end
 

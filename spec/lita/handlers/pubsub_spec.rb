@@ -24,6 +24,19 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     expect(replies.last).to eq('Subscriptions for foos: []')
   end
 
+  it 'unsubscribes current channel from all events' do
+    send_message('lita subscribe foo', from: room)
+    send_message('lita subscribe bar', from: room)
+    send_message('lita subscribe baz', from: room)
+    send_message('lita unsubscribe all events', from: room)
+    expect(replies[-3]).to eq("Unsubscribed foos from bar events")
+    expect(replies[-2]).to eq("Unsubscribed foos from baz events")
+    expect(replies[-1]).to eq("Unsubscribed foos from foo events")
+
+    send_message('lita subscriptions', from: room)
+    expect(replies.last).to eq('Subscriptions for foos: []')
+  end
+
   it 'shows room subscriptions' do
     send_message('lita subscribe foo', from: room)
     send_message('lita subscriptions', from: room)
@@ -70,15 +83,15 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
 
     it 'receives events via http get' do
       send_message("lita subscribe foo", from: room)
-      http.get('/pubsub/foo?payload=bar%20baz&password=secret')
+      http.get('/publish?event=foo&data=bar%20baz&password=secret')
       expect(replies.last).to eq('bar baz')
     end
 
     it 'receives events via http post' do
       send_message("lita subscribe foo", from: room)
       http.post(
-        '/pubsub/foo',
-        '{"payload":"bar baz", "password":"secret"}',
+        '/publish',
+        '{"event": "foo", "data":"bar baz", "password":"secret"}',
         'Content-Type' => 'application/json'
       )
       expect(replies.last).to eq('bar baz')
@@ -87,40 +100,30 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     it 'receives events via http get when password is not set' do
       send_message("lita subscribe foo", from: room)
       Lita.config.handlers.pubsub.http_password = nil
-      http.get('/pubsub/foo?payload=bar%20baz')
+      http.get('/publish?event=foo&data=bar%20baz')
       expect(replies.last).to eq('bar baz')
     end
 
     it 'rejects http request without any password' do
       expect {
-        http.get('/pubsub/foo?payload=bar%20baz')
+        http.get('/publish?event=foo&data=bar%20baz')
       }.to raise_error('incorrect password!')
     end
 
     it 'rejects bad password via http get' do
       expect {
-        http.get('/pubsub/foo?payload=bar%20baz&password=haxor')
+        http.get('/publish?event=foo&data=bar%20baz&password=haxor')
       }.to raise_error('incorrect password!')
     end
 
     it 'rejects bad password via http post' do
       expect {
         http.post(
-          '/pubsub/foo',
-          '{"payload":"bar baz", "password":"lol"}',
+          '/publish',
+          '{"event":"foo", "data":"bar baz", "password":"lol"}',
           'Content-Type' => 'application/json'
         )
       }.to raise_error('incorrect password!')
-    end
-
-    it 'ignores invalid http event' do
-      send_message("lita subscribe foo", from: room)
-      http.post(
-        URI.escape('/pubsub/^leet*haX0r'),
-        '{"payload":"bar baz"}',
-        'Content-Type' => 'application/json'
-      )
-      expect(replies.last).to eq('Subscribed foos to foo events')
     end
   end
 end
