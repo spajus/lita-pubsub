@@ -31,7 +31,7 @@ module Lita
         /^subscribe ([a-z0-9\-\.\:_]+)$/i,
         :subscribe,
         command: true,
-        help: { 'subscribe EVENT' => 'pubsub: subscribes room to event' }
+        help: { 'subscribe EVENT' => 'pubsub: subscribes room to event. subscribe to `unsubscribed.event` to debug missing events.' }
       )
 
       route(
@@ -55,20 +55,27 @@ module Lita
         help: { 'publish EVENT DATA' => 'pubsub: publishes DATA to EVENT subscribers' }
       )
 
-      on(:pubsub) do |payload|
+      on(:publish) do |payload|
         event = payload[:event]
         rooms = find_subscriptions(event)
-
-        rooms.each do |room|
-          target = Source.new(room: room)
-          robot.send_message(target, format_message(event, payload[:data]))
+        if rooms.any?
+          rooms.each do |room|
+            target = Source.new(room: room)
+            robot.send_message(target, format_message(event, payload[:data]))
+          end
+        else
+          robot.trigger(
+            :publish,
+            event: 'unsubscribed.event',
+            data: "#{event}: #{payload[:data]}"
+          )
         end
       end
 
       def http_get(request, response)
         validate_http_password!(request.params['password'])
         robot.trigger(
-          :pubsub,
+          :publish,
           event: request.params['event'],
           data: request.params['data']
         )
@@ -79,7 +86,7 @@ module Lita
         data = JSON.parse(request.body.read)
         validate_http_password!(request.params['password'] || data['password'])
         robot.trigger(
-          :pubsub,
+          :publish,
           event: data['event'],
           data: data['data']
         )
@@ -151,7 +158,7 @@ module Lita
 
       def publish(response)
         event, data = response.matches[0]
-        robot.trigger(:pubsub, event: event, data: data)
+        robot.trigger(:publish, event: event, data: data)
       end
 
       private

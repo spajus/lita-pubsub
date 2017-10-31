@@ -78,6 +78,16 @@ POST /publish
  * Content-Type: `application/json`
  * Body: `{ "password": "optional", "event": "event", "data": "text" }`
 
+## Event Namespaces
+
+Lita PubSub uses `.` as event namespace separator. I.e.: subscribing to `x.y`
+also subscribes to `x.y.*` events.
+
+## Handling unsubscribed events
+
+Do `lita subscribe unsubscribed.event` in a room where you want all unrouted
+events to get announced.
+
 ## Warning
 
 HTTP password protection is trivial, and should not be used in public networks.

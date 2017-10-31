@@ -83,6 +83,12 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     )
   end
 
+  it 'publishes data to unsubscribed.event subscribers' do
+    send_message("lita subscribe unsubscribed.event", from: room)
+    send_message("lita publish foo bar de baz")
+    expect(replies.last).to eq('*unsubscribed.event*: foo: bar de baz')
+  end
+
   it 'does not fail when unsubscribing unsubscribed event' do
     send_message("lita unsubscribe bar", from: room)
     expect(replies.last).to eq(
