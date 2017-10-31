@@ -69,14 +69,14 @@ module Lita
       def subscriptions(response)
         room = response.room
         return response.reply('This command only works in a room') unless room
-        subscriptions = redis.smembers("pubsub.rooms.#{room.id}")
+        subscriptions = redis.smembers("pubsub.rooms.#{room.id}").sort
         response.reply("Subscriptions for #{room.name}: #{subscriptions}")
       end
 
       def subscribers(response)
         event = response.matches[0][1]
-        subscriptions = redis.smembers("pubsub.events.#{event}")
-        response.reply("Subscribers of #{event}: #{subscriptions}")
+        subscribers = redis.smembers("pubsub.events.#{event}").sort
+        response.reply("Subscribers of #{event}: #{subscribers}")
       end
 
       def subscribe(response)
@@ -92,7 +92,7 @@ module Lita
         event = response.matches[0][0]
         room = response.room
         return response.reply('This command only works in a room') unless room
-        subscriptions = redis.smembers("pubsub.rooms.#{room.id}")
+        subscriptions = redis.smembers("pubsub.rooms.#{room.id}").sort
         if subscriptions.include?(event)
           redis.srem("pubsub.rooms.#{room.id}", event)
           redis.srem("pubsub.events.#{event}", room.id)
