@@ -66,8 +66,21 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     send_message("lita subscribe foo", from: room)
     send_message("lita subscribe foo", from: room2)
     send_message("lita publish foo bar de baz")
-    expect(replies[-1]).to eq('bar de baz')
-    expect(replies[-2]).to eq('bar de baz')
+    expect(replies[-1]).to eq('*foo*: bar de baz')
+    expect(replies[-2]).to eq('*foo*: bar de baz')
+  end
+
+  it 'publishes data to partial event subscribers' do
+    send_message("lita subscribe foo", from: room)
+    send_message("lita subscribe foo.bar", from: room2)
+    send_message("lita publish foo.bar i am foo.bar")
+    send_message("lita publish foo.baz i am foo.baz")
+    expect(replies.last(3).sort.uniq).to eq(
+      [
+        "*foo.bar*: i am foo.bar",
+        "*foo.baz*: i am foo.baz"
+      ]
+    )
   end
 
   it 'does not fail when unsubscribing unsubscribed event' do
@@ -84,7 +97,7 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     it 'receives events via http get' do
       send_message("lita subscribe foo", from: room)
       http.get('/publish?event=foo&data=bar%20baz&password=secret')
-      expect(replies.last).to eq('bar baz')
+      expect(replies.last).to eq('*foo*: bar baz')
     end
 
     it 'receives events via http post' do
@@ -94,14 +107,14 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
         '{"event": "foo", "data":"bar baz", "password":"secret"}',
         'Content-Type' => 'application/json'
       )
-      expect(replies.last).to eq('bar baz')
+      expect(replies.last).to eq('*foo*: bar baz')
     end
 
     it 'receives events via http get when password is not set' do
       send_message("lita subscribe foo", from: room)
       Lita.config.handlers.pubsub.http_password = nil
       http.get('/publish?event=foo&data=bar%20baz')
-      expect(replies.last).to eq('bar baz')
+      expect(replies.last).to eq('*foo*: bar baz')
     end
 
     it 'rejects http request without any password' do

@@ -57,10 +57,11 @@ module Lita
 
       on(:pubsub) do |payload|
         event = payload[:event]
-        rooms = redis.smembers("pubsub.events.#{event}")
+        rooms = find_subscriptions(event)
+
         rooms.each do |room|
           target = Source.new(room: room)
-          robot.send_message(target, payload[:data])
+          robot.send_message(target, format_message(event, payload[:data]))
         end
       end
 
@@ -102,7 +103,7 @@ module Lita
 
       def subscribers(response)
         event = response.matches[0][1]
-        subscribers = redis.smembers("pubsub.events.#{event}").sort
+        subscribers = find_subscriptions(event)
         response.reply("Subscribers of #{event}: #{subscribers}")
       end
 
@@ -154,6 +155,29 @@ module Lita
       end
 
       private
+
+      def format_message(event, data)
+        "*#{event}*: #{data}"
+      end
+
+      def find_subscriptions(event)
+        return [] if event.nil? || event.empty?
+        subscriptions = redis.smembers('pubsub.events').sort
+        if event.include?('.')
+          ev_parts = event.split('.')
+          matched = []
+          while ev_parts.any?
+            sub_ev = ev_parts.join('.')
+            if subscriptions.include?(sub_ev)
+              matched += redis.smembers("pubsub.events.#{sub_ev}").sort
+            end
+            ev_parts.pop
+          end
+          matched.sort.uniq
+        else
+          redis.smembers("pubsub.events.#{event}")
+        end
+      end
 
       def validate_http_password!(password)
         return if config.http_password.nil? || config.http_password.empty?
