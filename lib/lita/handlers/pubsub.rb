@@ -184,7 +184,7 @@ module Lita
           end
           matched.sort.uniq
         else
-          redis.smembers("pubsub.events.#{event}")
+          redis.smembers("pubsub.events.#{event}").sort
         end
       end
 
