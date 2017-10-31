@@ -51,9 +51,19 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     )
   end
 
-  it 'receives subscriptions from http' do
+  it 'receives events via http get' do
     send_message("lita subscribe foo", from: room)
-    http.get('/pubsub/foo?payload=bar+baz')
+    http.get('/pubsub/foo?payload=bar%20baz')
+    expect(replies.last).to eq('bar baz')
+  end
+
+  it 'receives events via http post' do
+    send_message("lita subscribe foo", from: room)
+    http.post(
+      '/pubsub/foo',
+      '{"payload":"bar baz"}',
+      'Content-Type' => 'application/json'
+    )
     expect(replies.last).to eq('bar baz')
   end
 end

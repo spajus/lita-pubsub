@@ -1,12 +1,13 @@
-require "lita"
+require 'json'
+require 'lita'
 
 Lita.load_locales Dir[File.expand_path(
   File.join("..", "..", "locales", "*.yml"), __FILE__
 )]
 
-require "lita/handlers/pubsub"
+require 'lita/handlers/pubsub'
 
 Lita::Handlers::Pubsub.template_root File.expand_path(
-  File.join("..", "..", "templates"),
+  File.join('..', '..', 'templates'),
  __FILE__
 )
