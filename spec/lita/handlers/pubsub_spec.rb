@@ -50,4 +50,10 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
       'Current subscriptions: []'
     )
   end
+
+  it 'receives subscriptions from http' do
+    send_message("lita subscribe foo", from: room)
+    http.get('/pubsub/foo?payload=bar+baz')
+    expect(replies.last).to eq('bar baz')
+  end
 end

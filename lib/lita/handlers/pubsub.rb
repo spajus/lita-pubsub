@@ -1,6 +1,7 @@
 module Lita
   module Handlers
     class Pubsub < Handler
+      http.get('/pubsub/:event', :http_get)
       route(
         /^subscriptions$/i,
         :subscriptions,
@@ -43,6 +44,15 @@ module Lita
           target = Source.new(room: room)
           robot.send_message(target, payload[:data])
         end
+      end
+
+      def http_get(request, response)
+        robot.trigger(
+          :pubsub,
+          event: request.env['router.params'][:event],
+          data: request.params['payload']
+        )
+        response.write('ok')
       end
 
       def subscriptions(response)
