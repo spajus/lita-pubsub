@@ -64,11 +64,13 @@ module Lita
             robot.send_message(target, format_message(event, payload[:data]))
           end
         else
-          robot.trigger(
-            :publish,
-            event: 'unsubscribed.event',
-            data: "#{event}: #{payload[:data]}"
-          )
+          if redis.smembers('pubsub.events.unsubscribed.event').any?
+            robot.trigger(
+              :publish,
+              event: 'unsubscribed.event',
+              data: "#{event}: #{payload[:data]}"
+            )
+          end
         end
       end
 

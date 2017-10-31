@@ -83,6 +83,11 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     )
   end
 
+  it 'ignores unsubscribed events' do
+    send_message('lita publish foo bar de baz')
+    expect(replies).to be_empty
+  end
+
   it 'publishes data to unsubscribed.event subscribers' do
     send_message("lita subscribe unsubscribed.event", from: room)
     send_message("lita publish foo bar de baz")
