@@ -3,10 +3,10 @@ Gem::Specification.new do |spec|
   spec.version       = "0.1.0"
   spec.authors       = ["Tomas Varaneckas"]
   spec.email         = ["tomas.varaneckas@gmail.com"]
-  spec.description   = "TODO: Add a description"
-  spec.summary       = "TODO: Add a summary"
-  spec.homepage      = "TODO: Add a homepage"
-  spec.license       = "TODO: Add a license"
+  spec.description   = "PubSub notification system for Lita"
+  spec.summary       = "PubSub notification system for Lita"
+  spec.homepage      = "https://github.com/spajus/hubot-lita"
+  spec.license       = "MIT License"
   spec.metadata      = { "lita_plugin_type" => "handler" }
 
   spec.files         = `git ls-files`.split($/)
