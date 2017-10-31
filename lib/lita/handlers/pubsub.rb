@@ -24,7 +24,7 @@ module Lita
         /^subscribers (of )?([a-z0-9\-\.\:_]+)$/i,
         :subscribers,
         command: true,
-        help: { 'subscriptions of EVENT' => 'pubsub: shows rooms subscribed to EVENT' }
+        help: { 'subscribers [of] EVENT' => 'pubsub: shows rooms subscribed to EVENT' }
       )
 
       route(

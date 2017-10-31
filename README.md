@@ -33,6 +33,37 @@ PubSub](https://github.com/spajus/hubot-pubsub).
        +---------------+  +---------------+
 ```
 
+## How It Works
+
+```console
+$ bundle exec lita start
+Type "exit" or "quit" to end the session.
+Lita > lita help pubsub
+Lita: all subscriptions - pubsub: shows all subscriptions
+Lita: subscriptions - pubsub: shows current room subscriptions
+Lita: subscribers [of] EVENT - pubsub: shows rooms subscribed to EVENT
+Lita: subscribe EVENT - pubsub: subscribes room to event. subscribe to
+`unsubscribed.event` to debug missing events.
+Lita: unsubscribe EVENT - pubsub: subscribes current channel to event
+Lita: unsubscribe all events - pubsub: unsubscribes current channel from all
+events
+Lita: publish EVENT DATA - pubsub: publishes DATA to EVENT subscribers
+Lita > lita subscriptions
+Subscriptions for shell: []
+Lita > lita subscribe jenkins
+Subscribed shell to jenkins events
+# You would normally use HTTP API at lita:8080/publish for same result
+Lita > lita publish jenkins.build.fail Build #12141 failed!
+*jenkins.build.fail*: Build #12141 failed!
+Lita > lita publish nothing emptiness
+Lita > lita subscribe unsubscribed.event
+Subscribed shell to unsubscribed.event events
+Lita > lita publish nothing emptiness
+*unsubscribed.event*: nothing: emptiness
+Lita > lita subscribers of jenkins
+Subscribers of jenkins: ["shell"]
+```
+
 ## Installation
 
 Add lita-pubsub to your Lita instance's Gemfile:
