@@ -1,9 +1,9 @@
-# lita-pubsub
+# Lita PubSub
 
-[![Build Status](https://travis-ci.org/spajus/lita-pubsub.png?branch=master)](https://travis-ci.org/spajus/lita-pubsub)
-[![Coverage Status](https://coveralls.io/repos/spajus/lita-pubsub/badge.png)](https://coveralls.io/r/spajus/lita-pubsub)
+PubSub notification system for [Lita](https://www.lita.io/)
 
-TODO: Add a description of the plugin.
+[![Build Status](https://travis-ci.org/spajus/lita-pubsub.png?branch=master)](https://travis-ci.org/spajus/lita-pubsub?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/spajus/lita-pubsub/badge.svg?branch=master)](https://coveralls.io/github/spajus/lita-pubsub?branch=master)
 
 ## Installation
 
@@ -15,8 +15,8 @@ gem "lita-pubsub"
 
 ## Configuration
 
-TODO: Describe any configuration attributes the plugin exposes.
+TODO
 
 ## Usage
 
-TODO: Describe the plugin's features and how to use them.
+TODO
