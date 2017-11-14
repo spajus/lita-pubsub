@@ -76,23 +76,27 @@ module Lita
 
       def http_get(request, response)
         validate_http_password!(request.params['password'])
-        robot.trigger(
-          :publish,
-          event: request.params['event'],
-          data: request.params['data']
-        )
         response.write('ok')
+        Thread.new do
+          robot.trigger(
+            :publish,
+            event: request.params['event'],
+            data: request.params['data']
+          )
+        end
       end
 
       def http_post(request, response)
         data = JSON.parse(request.body.read)
         validate_http_password!(request.params['password'] || data['password'])
-        robot.trigger(
-          :publish,
-          event: data['event'],
-          data: data['data']
-        )
         response.write('ok')
+        Thread.new do
+          robot.trigger(
+            :publish,
+            event: data['event'],
+            data: data['data']
+          )
+        end
       end
 
       def all_subscriptions(response)

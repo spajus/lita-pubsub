@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "lita-pubsub"
-  spec.version       = "0.1.1"
+  spec.version       = "0.2.0"
   spec.authors       = ["Tomas Varaneckas"]
   spec.email         = ["tomas.varaneckas@gmail.com"]
   spec.description   = "PubSub notification system for Lita"

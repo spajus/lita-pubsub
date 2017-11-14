@@ -108,6 +108,7 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
     it 'receives events via http get' do
       send_message("lita subscribe foo", from: room)
       http.get('/publish?event=foo&data=bar%20baz&password=secret')
+      sleep 0.1 # Give thread some time
       expect(replies.last).to eq('*foo*: bar baz')
     end
 
@@ -118,6 +119,7 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
         '{"event": "foo", "data":"bar baz", "password":"secret"}',
         'Content-Type' => 'application/json'
       )
+      sleep 0.1 # Give thread some time
       expect(replies.last).to eq('*foo*: bar baz')
     end
 
@@ -125,18 +127,21 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
       send_message("lita subscribe foo", from: room)
       Lita.config.handlers.pubsub.http_password = nil
       http.get('/publish?event=foo&data=bar%20baz')
+      sleep 0.1 # Give thread some time
       expect(replies.last).to eq('*foo*: bar baz')
     end
 
     it 'rejects http request without any password' do
       expect {
         http.get('/publish?event=foo&data=bar%20baz')
+        sleep 0.1 # Give thread some time
       }.to raise_error('incorrect password!')
     end
 
     it 'rejects bad password via http get' do
       expect {
         http.get('/publish?event=foo&data=bar%20baz&password=haxor')
+        sleep 0.1 # Give thread some time
       }.to raise_error('incorrect password!')
     end
 
@@ -147,6 +152,7 @@ describe Lita::Handlers::Pubsub, lita_handler: true do
           '{"event":"foo", "data":"bar baz", "password":"lol"}',
           'Content-Type' => 'application/json'
         )
+        sleep 0.1 # Give thread some time
       }.to raise_error('incorrect password!')
     end
   end
